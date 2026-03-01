@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Крокодил - Запечь</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap');
+        
+        :root {
+            --sat: env(safe-area-inset-top);
+            --sar: env(safe-area-inset-right);
+            --sab: env(safe-area-inset-bottom);
+            --sal: env(safe-area-inset-left);
+        }
+
+        body { 
+            font-family: 'Manrope', sans-serif; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            -webkit-tap-highlight-color: transparent;
+            padding-top: var(--sat);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            box-shadow: 0 10px 30px -5px rgba(234, 88, 12, 0.5);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 10px 30px -5px rgba(34, 197, 94, 0.5);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 10px 30px -5px rgba(239, 68, 68, 0.5);
+        }
+
+        .dish-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 24px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dish-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            backface-visibility: hidden;
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, rgba(234,88,12,0.3) 0%, rgba(194,65,12,0.3) 100%);
+        }
+
+        .timer-bar {
+            background: linear-gradient(90deg, #22c55e 0%, #ea580c 50%, #ef4444 100%);
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1s linear;
+        }
+
+        .category-badge {
+            background: rgba(234, 88, 12, 0.3);
+            border: 1px solid rgba(234, 88, 12, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .team-score {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .pulse-animation {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(234, 88, 12, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(234, 88, 12, 0.8); }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        * { -webkit-user-select: none; user-select: none; }
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <!-- Экран настройки команд -->
+    <div id="setupScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div class="text-center mb-8 float-animation">
+            <div class="text-6xl mb-4">🐊</div>
+            <h1 class="text-4xl font-black text-white mb-2">КРОКОДИЛ</h1>
+            <p class="text-orange-400 font-bold text-sm uppercase tracking-widest">Ресторан «Запечь»</p>
+        </div>
+
+        <div class="game-card w-full max-w-md p-6 space-y-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Выберите категории блюд</label>
+                <div class="grid grid-cols-2 gap-2" id="categorySelect">
+                    <button class="category-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all" data-cat="all">Все блюда</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="закуски">🧀 Закуски</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="печь дала">🔥 Печь дала</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="салаты">🥗 Салаты</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="супы">🍲 Супы</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="мангал">🔥 Мангал</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="горячие">🍽️ Горячее</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="десерты">🍰 Десерты</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Время на раунд (сек)</label>
+                <div class="flex gap-2">
+                    <button class="time-btn bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1" data-time="30">30</button>
+                    <button class="time-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20" data-time="45">45</button>
+                    <button class="time-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20" data-time="60">60</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Режим игры</label>
+                <div class="flex gap-2">
+                    <button class="mode-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1" data-mode="classic">Классика</button>
+                    <button class="mode-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20" data-mode="teams">Командный</button>
+                </div>
+            </div>
+
+            <button id="startGameBtn" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-sm tracking-widest text-white mt-4">
+                Начать игру
+            </button>
+        </div>
+    </div>
+
+    <!-- Экран игры -->
+    <div id="gameScreen" class="hidden fixed inset-0 flex flex-col">
+        <!-- Header -->
+        <header class="bg-black/20 backdrop-blur-xl border-b border-white/10 p-4 pt-safe">
+            <div class="flex justify-between items-center max-w-lg mx-auto">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🐊</span>
+                    <span class="font-black text-lg">КРОКОДИЛ</span>
+                </div>
+                <button id="menuBtn" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <i class="fa fa-pause text-white"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Score Board -->
+        <div class="flex justify-center gap-4 p-4">
+            <div class="team-score px-6 py-3 rounded-2xl text-center">
+                <div class="text-xs font-bold text-slate-400 uppercase">Команда 1</div>
+                <div class="text-3xl font-black text-orange-400" id="score1">0</div>
+            </div>
+            <div class="team-score px-6 py-3 rounded-2xl text-center">
+                <div class="text-xs font-bold text-slate-400 uppercase">Команда 2</div>
+                <div class="text-3xl font-black text-orange-400" id="score2">0</div>
+            </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="px-6 mb-4">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-slate-400 uppercase" id="currentTeam">Ход: Команда 1</span>
+                <span class="text-2xl font-black text-white" id="timerDisplay">45</span>
+            </div>
+            <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                <div id="timerBar" class="timer-bar w-full"></div>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="flex-1 flex flex-col items-center justify-center p-6 relative">
+            <!-- Start Round Button -->
+            <button id="startRoundBtn" class="btn-primary pulse-animation px-12 py-6 rounded-3xl font-black text-xl uppercase tracking-wider text-white mb-8">
+                <i class="fa fa-play mr-2"></i> Начать раунд
+            </button>
+
+            <!-- Dish Card -->
+            <div id="dishCard" class="dish-card w-full max-w-sm aspect-[4/5] relative hidden cursor-pointer" onclick="flipCard()">
+                <div class="card-face card-front">
+                    <div class="category-badge px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-4" id="dishCategory">
+                        Категория
+                    </div>
+                    <div class="text-6xl mb-4" id="dishIcon">🍽️</div>
+                    <h2 class="text-2xl font-black text-center leading-tight mb-2" id="dishTitle">Название блюда</h2>
+                    <p class="text-xs text-slate-400 text-center font-medium">Нажмите, чтобы увидеть описание</p>
+                </div>
+                <div class="card-face card-back">
+                    <h3 class="text-lg font-black text-center mb-3" id="dishTitleBack">Название</h3>
+                    <p class="text-xs text-center text-white/80 leading-relaxed mb-4" id="dishDesc">Описание блюда</p>
+                    <div class="bg-black/20 rounded-xl p-3 w-full">
+                        <p class="text-[10px] text-orange-300 uppercase font-bold mb-1">Состав:</p>
+                        <p class="text-xs text-white/90" id="dishIngredients">Ингредиенты</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div id="actionButtons" class="hidden w-full max-w-sm grid grid-cols-2 gap-3 mt-6">
+                <button onclick="handleResult(false)" class="btn-danger py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+                    <i class="fa fa-times mr-1"></i> Пропустить
+                </button>
+                <button onclick="handleResult(true)" class="btn-success py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+                    <i class="fa fa-check mr-1"></i> Угадали
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="pauseModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+        <div class="game-card w-full max-w-sm p-6 text-center">
+            <h2 class="text-2xl font-black mb-6">Пауза</h2>
+            <div class="space-y-3">
+                <button onclick="resumeGame()" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+                    Продолжить
+                </button>
+                <button onclick="showSetup()" class="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white bg-white/10 hover:bg-white/20 transition-all">
+                    Новая игра
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Round Result Modal -->
+    <div id="resultModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+        <div class="game-card w-full max-w-sm p-6 text-center">
+            <div id="resultIcon" class="text-6xl mb-4">🎉</div>
+            <h2 id="resultTitle" class="text-2xl font-black mb-2">Отлично!</h2>
+            <p id="resultText" class="text-slate-400 text-sm mb-6">Команда 1 получает 1 очко</p>
+            <button onclick="nextRound()" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+                Следующий раунд
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ МЕНЮ ---
+        const menuData = [
+            { cat: 'закуски', title: 'Дощечка локального сыра', ingredients: 'Пармезан, Чеддер, Бармер, домашний сыр, мед, манго, микрозелень.', desc: 'Четыре сыра: пикантный, насыщенный, нежный и мягкий.', icon: '🧀' },
+            { cat: 'закуски', title: 'Дощечка сала копченого', ingredients: 'Сало соленое и копченое, черемша, горчица баварская, хрен, хлеб бородинский.', desc: 'Два вкуса: нежное сочное и ароматное копченое.', icon: '🥓' },
+            { cat: 'закуски', title: 'Дощечка мясных деликатесов', ingredients: 'Буженина, язык говяжий, бастурма, горчица, гриссини, огурцы, лук, хрен сливочный.', desc: 'Сочная буженина, нежный отварной язык и ароматная бастурма.', icon: '🥩' },
+            { cat: 'закуски', title: 'Грузди и опята в сметане', ingredients: 'Грузди и опята маринованные, сметана, лук, масло зеленое, микрозелень, сумах.', desc: 'Легкая, но насыщенная закуска в лучших традициях.', icon: '🍄' },
+            { cat: 'закуски', title: 'Черноморская барабулька', ingredients: 'Барабулька жареная, лайм, битые огурцы, микс зелени.', desc: 'Золотистая, хрустящая рыба с освежающими огурцами.', icon: '🐟' },
+            { cat: 'закуски', title: 'Форшмак с яблоком', ingredients: 'Форшмак, яблоко, микрозелень, гренки из хлеба черного бородинского.', desc: 'Нежная закуска из измельченной сельди с яблоком.', icon: '🐟' },
+            { cat: 'закуски', title: 'Сельдь иваси с картофелем', ingredients: 'Филе иваси, соус из лимона, мини картофель, хлеб бородинский.', desc: 'Соленое филе иваси с ярким лимонным соусом.', icon: '🥔' },
+            { cat: 'закуски', title: 'Домашний сыр в орехах', ingredients: 'Камамбер в орехах, фритюр, кули смородина, микрозелень.', desc: 'Сыр камамбер обжаривается до золотистой корочки.', icon: '🥜' },
+            { cat: 'закуски', title: 'Паштет из кролика', ingredients: 'Паштет из кролика, варенье смородина, фундук, фисташки, белый подовый хлеб.', desc: 'Нежный паштет, томленый в печи с кули из смородины.', icon: '🏺' },
+            { cat: 'закуски', title: 'Тар-тар из говядины', ingredients: 'Стриплойн, каперсы, лук, соус тартар, сулугуни фри, пармезан.', desc: 'Тар-тар из стриплойна на подушке из хрустящего сулугуни.', icon: '🍽️' },
+            { cat: 'закуски', title: 'Креветки с кремом из брокколи', ingredients: 'Креветки, сливки, уголь, крем брокколи, черри ким-чи, масло чесночное.', desc: 'Креветки в чесночном масле на нежном креме из брокколи.', icon: '🍤' },
+            { cat: 'закуски', title: 'Малосольные огурцы с медом', ingredients: 'Малосольные огурцы, мед, микс зелени.', desc: 'Хрустящие малосольные огурцы с медом.', icon: '🥒' },
+            
+            { cat: 'печь дала', title: 'Пирожки бабушкины из печи', ingredients: 'Мука, молоко, яйцо, масло сливочное. Начинки: мясо, грибы, яйцо/лук, капуста, яблоко.', desc: 'Пирожки из нежнейшего теста с сочными начинками.', icon: '🥟' },
+            { cat: 'печь дала', title: 'Чеховский пирог', ingredients: 'Сдобное тесто, куриное бедро, шампиньоны, пармезан, лук, сливки, блины.', desc: 'Пирог с хрустящей корочкой и сытной начинкой из курицы.', icon: '🥧' },
+            { cat: 'печь дала', title: 'Тверской накрепок', ingredients: 'Сдобное тесто, гречка, лук, судак, лосось, сливки, пармезан.', desc: 'Пирог с рассыпчатой сытной начинкой из крупы и грибов.', icon: '🐟' },
+            { cat: 'печь дала', title: 'Рыбник', ingredients: 'Дрожжевое тесто, судак, лосось, лук, сливки, рис.', desc: 'Пирог с сочной начинкой из белой и красной рыбы.', icon: '⛵' },
+            { cat: 'печь дала', title: 'Хлебная корзина', ingredients: 'Пшеничный, солодовый, бородинский хлеб, булочки.', desc: 'Ассорти из свежеиспеченного хлеба разных сортов.', icon: '🍞' },
+            { cat: 'печь дала', title: 'Каша калужская купеческая', ingredients: 'Полбяная каша, сливки, куриное бедро, белые грибы, лук.', desc: 'Победитель фестиваля! Каша с нежным сливочным вкусом.', icon: '🥣' },
+            { cat: 'печь дала', title: 'Пуховая каша с говяжьими щечками', ingredients: 'Гречневая каша, овощи, говяжьи щечки, соус демиглас.', desc: 'Классическая каша с нежными говяжьими щечками.', icon: '🍲' },
+            { cat: 'печь дала', title: 'Царская вольница', ingredients: 'Пшенная каша, молоко, сливочное масло, тыква, варенье морошка, кедровый орех.', desc: 'Нежная сливочная каша с тыквой и морошкой.', icon: '👑' },
+
+            { cat: 'салаты', title: 'Оливье с топленым говяжьим языком', ingredients: 'Картофель, морковь, яйцо, язык говяжий, огурцы соленые, горошек, майонез.', desc: 'Классическое оливье с нежным языком.', icon: '🥗' },
+            { cat: 'салаты', title: 'Салат с уткой копченой', ingredients: 'Утка копченая, помидоры, яблоко моченое, шпинат, финики, романо.', desc: 'Яркий вкус копченой утки с сочными томатами.', icon: '🦆' },
+            { cat: 'салаты', title: 'Деревенский салат с домашним сыром', ingredients: 'Помидоры, огурцы, перец болгарский, шпинат, сыр адыгейский, микс семушек.', desc: 'Легкий овощной салат с нежным сыром.', icon: '🏡' },
+            { cat: 'салаты', title: 'Богатырский салат с говядиной', ingredients: 'Говяжья вырезка, картофель бейби, вешенки унаги, битые огурцы, шпинат.', desc: 'Сытный салат с сочным ростбифом.', icon: '⚔️' },
+            { cat: 'салаты', title: 'Салат с креветкой и кремом унаги', ingredients: 'Крем авокадо, малосольные огурцы, креветки, белок куриный, шпинат.', desc: 'Нежный крем из авокадо в сочетании с морепродуктами.', icon: '🍤' },
+            { cat: 'салаты', title: 'Зеленый салат с семечками', ingredients: 'Шпинат, брокколи, огурцы, яблоко, груша, микрозелень, пармезан.', desc: 'Витаминный микс из зеленых овощей и фруктов.', icon: '🥬' },
+            { cat: 'салаты', title: 'Салат с баклажанами', ingredients: 'Обжаренные баклажаны, мусс из копченого сыра, томаты, клюква вяленая.', desc: 'Хрустящие баклажаны с нежным сырным муссом.', icon: '🍆' },
+
+            { cat: 'супы', title: 'Суточные щи с квашеной капустой', ingredients: 'Мясной бульон, щечки говядина, капуста квашеная, помидоры, картофель, сметана.', desc: 'Наваристые суточные щи с говяжьими щечками.', icon: '🍲' },
+            { cat: 'супы', title: 'Борщ по рецепту 1888 г', ingredients: 'Мясной бульон, щечки, картофель, свекла, морковь, лук, капуста, варенец.', desc: 'Путешествие во вкус 18 века с варенцом и салом.', icon: '🥣' },
+            { cat: 'супы', title: 'Уха тройная', ingredients: 'Бульон на белой рыбе, картофель, морковь, судак, лосось, пшено.', desc: 'Уха на бульоне из леща с кусочками судака и лосося.', icon: '🐟' },
+            { cat: 'супы', title: 'Куриная лапша', ingredients: 'Куриный бульон, яйцо, курица, пассеровка, лапша яичная.', desc: 'Классический домашний суп с яичной лапшой.', icon: '🍜' },
+
+            { cat: 'мангал', title: 'Люля из баранины', ingredients: 'Люля из баранины, тортилья, маринованный лук, кинза, красный соус.', desc: 'Сочный люля из баранины с пикантным домашним соусом.', icon: '🍢' },
+            { cat: 'мангал', title: 'Люля из курицы', ingredients: 'Люля из курицы, тортилья, маринованный лук, кинза, красный соус.', desc: 'Нежный и диетический люля из куриного мяса.', icon: '🍗' },
+            { cat: 'мангал', title: 'Шашлык из куриного бедра', ingredients: 'Шашлык из куриного бедра, тортилья, маринованный лук, красный соус.', desc: 'Самая сочная часть курицы, маринованная в специях.', icon: '🔥' },
+            { cat: 'мангал', title: 'Шашлык из индейки', ingredients: 'Шашлык из грудки индейки, тортилья, маринованный лук, красный соус.', desc: 'Постный и полезный шашлык из филе индейки.', icon: '🏹' },
+            { cat: 'мангал', title: 'Шашлык из свиной шеи', ingredients: 'Шашлык из свиной шеи, тортилья, маринованный лук, красный соус.', desc: 'Классика мангала: нежная свинина с жировыми прослойками.', icon: '🐖' },
+            { cat: 'мангал', title: 'Сибас запеченный с сыром', ingredients: 'Сибас, начинка из сыра сулугуни и шпината, лайм, микс зелени.', desc: 'Морская рыба премиум-класса с тягучим сыром.', icon: '🐠' },
+            { cat: 'мангал', title: 'Стейк стриплойн', ingredients: 'Стейк говяжий, соус черный перец.', desc: 'Премиальный отруб с насыщенным мясным вкусом.', icon: '🥩' },
+
+            { cat: 'горячие', title: 'Пожарская котлета', ingredients: 'Котлета пожарская, брокколи, соус грибной, гренки, масло зеленое.', desc: 'Знаменитая котлета из птицы во вкусе истории.', icon: '🍗' },
+            { cat: 'горячие', title: 'Говядина по-петербургски', ingredients: 'Картофель бейби, говядина, грибы вешенки унаги, маринованный лук.', desc: 'Томленая говядина с обжаренным картофелем.', icon: '🥩' },
+            { cat: 'горячие', title: 'Жареный картофель с грибами', ingredients: 'Картофель жареный, грибы вешенки, лук, чеснок, укроп, сметана.', desc: 'Хрустящий жареный картофель с грибами.', icon: '🥔' },
+            { cat: 'горячие', title: 'Утиная ножка с кремом из батата', ingredients: 'Утиная ножка томленая, батат, сливки, соус демиглас.', desc: 'Нежнейшая утиная ножка на воздушном креме.', icon: '🦆' },
+            { cat: 'горячие', title: 'Щучьи котлеты в море из кедрового соуса', ingredients: 'Котлеты щучьи, картофельное пюре, кедровый соус.', desc: 'Легкие котлеты из щуки в нежном кедрово-сливочном соусе.', icon: '🐟' },
+            { cat: 'горячие', title: 'Говяжий язык запеченный с полбой', ingredients: 'Язык говяжий, полба, сливки, лук, морковь, соус демиглас.', desc: 'Запеченный говяжий язык с гарниром из полбы.', icon: '👅' },
+            { cat: 'горячие', title: 'Кролик томленый со сметаной', ingredients: 'Кролик филе, картофель, морковь, чеснок, сливки, сметана.', desc: 'Нежное мясо кролика, томленое со сливками.', icon: '🐇' },
+            { cat: 'горячие', title: 'Запеченная говядина в корнеплодах', ingredients: 'Говядина, пюре из корня сельдерея, морковь, картофель.', desc: 'Сочная говядина на подушке из пюре корня сельдерея.', icon: '🍽️' },
+            { cat: 'горячие', title: 'Стейк лосося с картофельной запеканкой', ingredients: 'Лосось филе, кабачок, морковь, сливки, соус бер-блан.', desc: 'Стейк лосося на пару с овощами.', icon: '🍣' },
+
+            { cat: 'десерты', title: 'Анна Павлова', ingredients: 'Безе, крем творожный, соус малиновый, клубника.', desc: 'Легкий десерт из хрустящего безе с нежным кремом.', icon: '🍰' },
+            { cat: 'десерты', title: 'Запеченное яблоко с грецким орехом', ingredients: 'Яблоко, крем яблочный, грецкий орех, клюква, крамбл, мед.', desc: 'Ароматное запеченное яблоко с хрустящим крамблом.', icon: '🍎' },
+            { cat: 'десерты', title: 'Медовик с грецким орехом', ingredients: 'Медовые коржи, крем на варенце, грецкий орех, ягоды.', desc: 'Классический многослойный медовик с кремом на варенце.', icon: '🍯' },
+            { cat: 'десерты', title: 'Блины из щавеля и шпината', ingredients: 'Шпинатные блины, сметана, варенье малиновое.', desc: 'Необычные изумрудные блины с малиновым вареньем.', icon: '🥞' },
+            { cat: 'десерты', title: 'Шарлотка из книги 1936 г', ingredients: 'Шарлотка, карамель, мороженое.', desc: 'Традиционный яблочный пирог по классическому рецепту.', icon: '🥧' },
+            { cat: 'десерты', title: 'Брауни на калужском тесте', ingredients: 'Брауни, вишня мороженая, крамбл.', desc: 'Насыщенный шоколадный десерт на основе калужского теста.', icon: '🍫' },
+            { cat: 'десерты', title: 'Творожник с шоколадом', ingredients: 'Творожник, соус шоколадный, ягоды.', desc: 'Нежный домашний творожник с шоколадным соусом.', icon: '🍮' }
+        ];
+
+        // --- СОСТОЯНИЕ ИГРЫ ---
+        let gameState = {
+            currentTeam: 1,
+            scores: [0, 0],
+            timeLeft: 45,
+            timerInterval: null,
+            selectedCategories: ['all'],
+            roundTime: 45,
+            currentDish: null,
+            isRoundActive: false,
+            gameMode: 'classic'
+        };
+
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.cat === 'all') {
+                    document.querySelectorAll('.category-btn').forEach(b => {
+                        b.classList.remove('active', 'bg-orange-600');
+                        b.classList.add('bg-white/10');
+                    });
+                    btn.classList.add('active', 'bg-orange-600');
+                    btn.classList.remove('bg-white/10');
+                    gameState.selectedCategories = ['all'];
+                } else {
+                    document.querySelector('.category-btn[data-cat="all"]').classList.remove('active', 'bg-orange-600');
+                    document.querySelector('.category-btn[data-cat="all"]').classList.add('bg-white/10');
+                    
+                    btn.classList.toggle('active');
+                    btn.classList.toggle('bg-orange-600');
+                    btn.classList.toggle('bg-white/10');
+                    
+                    const activeCats = Array.from(document.querySelectorAll('.category-btn.active')).map(b => b.dataset.cat);
+                    gameState.selectedCategories = activeCats.length > 0 ? activeCats : ['all'];
+                }
+            });
+        });
+
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.time-btn').forEach(b => {
+                    b.classList.remove('bg-orange-600');
+                    b.classList.add('bg-white/10');
+                });
+                btn.classList.add('bg-orange-600');
+                btn.classList.remove('bg-white/10');
+                gameState.roundTime = parseInt(btn.dataset.time);
+            });
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-orange-600');
+                    b.classList.add('bg-white/10');
+                });
+                btn.classList.add('active', 'bg-orange-600');
+                btn.classList.remove('bg-white/10');
+                gameState.gameMode = btn.dataset.mode;
+            });
+        });
+
+        document.getElementById('startGameBtn').addEventListener('click', startGame);
+        document.getElementById('startRoundBtn').addEventListener('click', startRound);
+        document.getElementById('menuBtn').addEventListener('click', pauseGame);
+
+        // --- ЛОГИКА ИГРЫ ---
+        function startGame() {
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            updateScoreDisplay();
+            updateTeamDisplay();
+        }
+
+        function getRandomDish() {
+            let availableDishes = menuData;
+            if (!gameState.selectedCategories.includes('all')) {
+                availableDishes = menuData.filter(d => gameState.selectedCategories.includes(d.cat));
+            }
+            return availableDishes[Math.floor(Math.random() * availableDishes.length)];
+        }
+
+        function startRound() {
+            gameState.currentDish = getRandomDish();
+            gameState.isRoundActive = true;
+            gameState.timeLeft = gameState.roundTime;
+            
+            // Обновляем карточку
+            document.getElementById('dishCategory').textContent = gameState.currentDish.cat;
+            document.getElementById('dishIcon').textContent = gameState.currentDish.icon;
+            document.getElementById('dishTitle').textContent = gameState.currentDish.title;
+            document.getElementById('dishTitleBack').textContent = gameState.currentDish.title;
+            document.getElementById('dishDesc').textContent = gameState.currentDish.desc;
+            document.getElementById('dishIngredients').textContent = gameState.currentDish.ingredients;
+            
+            // Сброс карточки
+            document.getElementById('dishCard').classList.remove('flipped');
+            
+            // UI
+            document.getElementById('startRoundBtn').classList.add('hidden');
+            document.getElementById('dishCard').classList.remove('hidden');
+            document.getElementById('actionButtons').classList.remove('hidden');
+            
+            // Запуск таймера
+            updateTimerDisplay();
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimerDisplay();
+                if (gameState.timeLeft <= 0) {
+                    handleResult(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timerDisplay').textContent = gameState.timeLeft;
+            const percentage = (gameState.timeLeft / gameState.roundTime) * 100;
+            document.getElementById('timerBar').style.width = percentage + '%';
+        }
+
+        function updateTeamDisplay() {
+            document.getElementById('currentTeam').textContent = `Ход: Команда ${gameState.currentTeam}`;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score1').textContent = gameState.scores[0];
+            document.getElementById('score2').textContent = gameState.scores[1];
+        }
+
+        function flipCard() {
+            document.getElementById('dishCard').classList.toggle('flipped');
+        }
+
+        function handleResult(success) {
+            clearInterval(gameState.timerInterval);
+            gameState.isRoundActive = false;
+            
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const text = document.getElementById('resultText');
+            
+            if (success) {
+                gameState.scores[gameState.currentTeam - 1]++;
+                updateScoreDisplay();
+                icon.textContent = '🎉';
+                title.textContent = 'Отгадано!';
+                title.className = 'text-2xl font-black mb-2 text-green-400';
+                text.textContent = `Команда ${gameState.currentTeam} получает 1 очко!`;
+                createConfetti();
+            } else {
+                icon.textContent = '⏰';
+                title.textContent = 'Время вышло!';
+                title.className = 'text-2xl font-black mb-2 text-orange-400';
+                text.textContent = `Это было: ${gameState.currentDish.title}`;
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function nextRound() {
+            document.getElementById('resultModal').classList.add('hidden');
+            gameState.currentTeam = gameState.currentTeam === 1 ? 2 : 1;
+            updateTeamDisplay();
+            
+            document.getElementById('dishCard').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('startRoundBtn').classList.remove('hidden');
+            document.getElementById('timerBar').style.width = '100%';
+            document.getElementById('timerDisplay').textContent = gameState.roundTime;
+        }
+
+        function pauseGame() {
+            if (gameState.isRoundActive) {
+                clearInterval(gameState.timerInterval);
+            }
+            document.getElementById('pauseModal').classList.remove('hidden');
+        }
+
+        function resumeGame() {
+            document.getElementById('pauseModal').classList.add('hidden');
+            if (gameState.isRoundActive) {
+                gameState.timerInterval = setInterval(() => {
+                    gameState.timeLeft--;
+                    updateTimerDisplay();
+                    if (gameState.timeLeft <= 0) {
+                        handleResult(false);
+                    }
+                }, 1000);
+            }
+        }
+
+        function showSetup() {
+            location.reload();
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = ['#ea580c', '#22c55e', '#fbbf24', '#3b82f6'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // Предотвращение случайного свайпа назад
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    </script>
+</body>
+</html>
