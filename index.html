@@ -16,13 +16,26 @@
             --sal: env(safe-area-inset-left);
         }
 
-        body { 
+        html, body { 
             font-family: 'Manrope', sans-serif; 
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             -webkit-tap-highlight-color: transparent;
-            padding-top: var(--sat);
             min-height: 100vh;
             color: white;
+            overflow-x: hidden;
+        }
+
+        /* Разрешаем скролл на экране настроек */
+        #setupScreen {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(40px + var(--sab));
+        }
+
+        /* Разрешаем скролл на экране игры */
+        #gameScreen {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .game-card {
@@ -119,16 +132,6 @@
             50% { transform: translateY(-10px); }
         }
 
-        .shake {
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
         .confetti {
             position: fixed;
             width: 10px;
@@ -142,67 +145,72 @@
             100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
+        /* Safe area для нижней панели */
+        .safe-bottom {
+            padding-bottom: calc(20px + var(--sab));
+        }
+
         * { -webkit-user-select: none; user-select: none; }
     </style>
 </head>
-<body class="overflow-hidden">
+<body>
 
     <!-- Экран настройки команд -->
-    <div id="setupScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div class="text-center mb-8 float-animation">
+    <div id="setupScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-start p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div class="w-full max-w-md mt-8 mb-8 float-animation text-center">
             <div class="text-6xl mb-4">🐊</div>
             <h1 class="text-4xl font-black text-white mb-2">КРОКОДИЛ</h1>
             <p class="text-orange-400 font-bold text-sm uppercase tracking-widest">Ресторан «Запечь»</p>
         </div>
 
-        <div class="game-card w-full max-w-md p-6 space-y-6">
+        <div class="game-card w-full max-w-md p-6 space-y-6 mb-8">
             <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Выберите категории блюд</label>
                 <div class="grid grid-cols-2 gap-2" id="categorySelect">
-                    <button class="category-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all" data-cat="all">Все блюда</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="закуски">🧀 Закуски</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="печь дала">🔥 Печь дала</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="салаты">🥗 Салаты</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="супы">🍲 Супы</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="мангал">🔥 Мангал</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="горячие">🍽️ Горячее</button>
-                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20" data-cat="десерты">🍰 Десерты</button>
+                    <button class="category-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 border-orange-600" data-cat="all">Все блюда</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="закуски">🧀 Закуски</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="печь дала">🔥 Печь дала</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="салаты">🥗 Салаты</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="супы">🍲 Супы</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="мангал">🔥 Мангал</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="горячие">🍽️ Горячее</button>
+                    <button class="category-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all hover:bg-white/20 border-2 border-transparent" data-cat="десерты">🍰 Десерты</button>
                 </div>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Время на раунд (сек)</label>
-                <div class="flex gap-2">
-                    <button class="time-btn bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1" data-time="30">30</button>
-                    <button class="time-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20" data-time="45">45</button>
-                    <button class="time-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20" data-time="60">60</button>
+                <div class="flex gap-2" id="timeSelect">
+                    <button class="time-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20 transition-all border-2 border-transparent" data-time="30">30</button>
+                    <button class="time-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 border-2 border-orange-600" data-time="45">45</button>
+                    <button class="time-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20 transition-all border-2 border-transparent" data-time="60">60</button>
                 </div>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Режим игры</label>
-                <div class="flex gap-2">
-                    <button class="mode-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1" data-mode="classic">Классика</button>
-                    <button class="mode-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20" data-mode="teams">Командный</button>
+                <div class="flex gap-2" id="modeSelect">
+                    <button class="mode-btn active bg-orange-600 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 border-2 border-orange-600" data-mode="classic">Классика</button>
+                    <button class="mode-btn bg-white/10 text-white px-4 py-3 rounded-xl text-xs font-bold flex-1 hover:bg-white/20 transition-all border-2 border-transparent" data-mode="teams">Командный</button>
                 </div>
             </div>
 
-            <button id="startGameBtn" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-sm tracking-widest text-white mt-4">
+            <button id="startGameBtn" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-sm tracking-widest text-white mt-4 safe-bottom">
                 Начать игру
             </button>
         </div>
     </div>
 
     <!-- Экран игры -->
-    <div id="gameScreen" class="hidden fixed inset-0 flex flex-col">
+    <div id="gameScreen" class="hidden fixed inset-0 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <!-- Header -->
-        <header class="bg-black/20 backdrop-blur-xl border-b border-white/10 p-4 pt-safe">
+        <header class="bg-black/20 backdrop-blur-xl border-b border-white/10 p-4 pt-safe sticky top-0 z-10">
             <div class="flex justify-between items-center max-w-lg mx-auto">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">🐊</span>
                     <span class="font-black text-lg">КРОКОДИЛ</span>
                 </div>
-                <button id="menuBtn" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                <button id="menuBtn" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform">
                     <i class="fa fa-pause text-white"></i>
                 </button>
             </div>
@@ -232,9 +240,9 @@
         </div>
 
         <!-- Game Area -->
-        <div class="flex-1 flex flex-col items-center justify-center p-6 relative">
+        <div class="flex-1 flex flex-col items-center justify-start p-6 relative safe-bottom">
             <!-- Start Round Button -->
-            <button id="startRoundBtn" class="btn-primary pulse-animation px-12 py-6 rounded-3xl font-black text-xl uppercase tracking-wider text-white mb-8">
+            <button id="startRoundBtn" class="btn-primary pulse-animation px-12 py-6 rounded-3xl font-black text-xl uppercase tracking-wider text-white mb-8 mt-8">
                 <i class="fa fa-play mr-2"></i> Начать раунд
             </button>
 
@@ -245,13 +253,13 @@
                         Категория
                     </div>
                     <div class="text-6xl mb-4" id="dishIcon">🍽️</div>
-                    <h2 class="text-2xl font-black text-center leading-tight mb-2" id="dishTitle">Название блюда</h2>
-                    <p class="text-xs text-slate-400 text-center font-medium">Нажмите, чтобы увидеть описание</p>
+                    <h2 class="text-2xl font-black text-center leading-tight mb-2 px-2" id="dishTitle">Название блюда</h2>
+                    <p class="text-xs text-slate-400 text-center font-medium mt-4">Нажмите, чтобы увидеть описание</p>
                 </div>
-                <div class="card-face card-back">
+                <div class="card-face card-back overflow-y-auto">
                     <h3 class="text-lg font-black text-center mb-3" id="dishTitleBack">Название</h3>
-                    <p class="text-xs text-center text-white/80 leading-relaxed mb-4" id="dishDesc">Описание блюда</p>
-                    <div class="bg-black/20 rounded-xl p-3 w-full">
+                    <p class="text-xs text-center text-white/80 leading-relaxed mb-4 px-2" id="dishDesc">Описание блюда</p>
+                    <div class="bg-black/20 rounded-xl p-3 w-full mx-4">
                         <p class="text-[10px] text-orange-300 uppercase font-bold mb-1">Состав:</p>
                         <p class="text-xs text-white/90" id="dishIngredients">Ингредиенты</p>
                     </div>
@@ -259,14 +267,17 @@
             </div>
 
             <!-- Action Buttons -->
-            <div id="actionButtons" class="hidden w-full max-w-sm grid grid-cols-2 gap-3 mt-6">
-                <button onclick="handleResult(false)" class="btn-danger py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+            <div id="actionButtons" class="hidden w-full max-w-sm grid grid-cols-2 gap-3 mt-6 safe-bottom">
+                <button onclick="handleResult(false)" class="btn-danger py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white active:scale-95 transition-transform">
                     <i class="fa fa-times mr-1"></i> Пропустить
                 </button>
-                <button onclick="handleResult(true)" class="btn-success py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+                <button onclick="handleResult(true)" class="btn-success py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white active:scale-95 transition-transform">
                     <i class="fa fa-check mr-1"></i> Угадали
                 </button>
             </div>
+            
+            <!-- Дополнительный отступ внизу для прокрутки -->
+            <div class="h-20 w-full"></div>
         </div>
     </div>
 
@@ -275,10 +286,10 @@
         <div class="game-card w-full max-w-sm p-6 text-center">
             <h2 class="text-2xl font-black mb-6">Пауза</h2>
             <div class="space-y-3">
-                <button onclick="resumeGame()" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+                <button onclick="resumeGame()" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white active:scale-95 transition-transform">
                     Продолжить
                 </button>
-                <button onclick="showSetup()" class="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white bg-white/10 hover:bg-white/20 transition-all">
+                <button onclick="showSetup()" class="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white bg-white/10 hover:bg-white/20 transition-all active:scale-95">
                     Новая игра
                 </button>
             </div>
@@ -291,7 +302,7 @@
             <div id="resultIcon" class="text-6xl mb-4">🎉</div>
             <h2 id="resultTitle" class="text-2xl font-black mb-2">Отлично!</h2>
             <p id="resultText" class="text-slate-400 text-sm mb-6">Команда 1 получает 1 очко</p>
-            <button onclick="nextRound()" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white">
+            <button onclick="nextRound()" class="btn-primary w-full py-4 rounded-2xl font-black uppercase text-xs tracking-wider text-white active:scale-95 transition-transform">
                 Следующий раунд
             </button>
         </div>
@@ -377,22 +388,24 @@
 
         // --- ИНИЦИАЛИЗАЦИЯ ---
         document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (btn.dataset.cat === 'all') {
+            btn.addEventListener('click', function() {
+                if (this.dataset.cat === 'all') {
                     document.querySelectorAll('.category-btn').forEach(b => {
-                        b.classList.remove('active', 'bg-orange-600');
-                        b.classList.add('bg-white/10');
+                        b.classList.remove('active', 'bg-orange-600', 'border-orange-600');
+                        b.classList.add('bg-white/10', 'border-transparent');
                     });
-                    btn.classList.add('active', 'bg-orange-600');
-                    btn.classList.remove('bg-white/10');
+                    this.classList.add('active', 'bg-orange-600', 'border-orange-600');
+                    this.classList.remove('bg-white/10', 'border-transparent');
                     gameState.selectedCategories = ['all'];
                 } else {
-                    document.querySelector('.category-btn[data-cat="all"]').classList.remove('active', 'bg-orange-600');
-                    document.querySelector('.category-btn[data-cat="all"]').classList.add('bg-white/10');
+                    document.querySelector('.category-btn[data-cat="all"]').classList.remove('active', 'bg-orange-600', 'border-orange-600');
+                    document.querySelector('.category-btn[data-cat="all"]').classList.add('bg-white/10', 'border-transparent');
                     
-                    btn.classList.toggle('active');
-                    btn.classList.toggle('bg-orange-600');
-                    btn.classList.toggle('bg-white/10');
+                    this.classList.toggle('active');
+                    this.classList.toggle('bg-orange-600');
+                    this.classList.toggle('bg-white/10');
+                    this.classList.toggle('border-orange-600');
+                    this.classList.toggle('border-transparent');
                     
                     const activeCats = Array.from(document.querySelectorAll('.category-btn.active')).map(b => b.dataset.cat);
                     gameState.selectedCategories = activeCats.length > 0 ? activeCats : ['all'];
@@ -401,26 +414,27 @@
         });
 
         document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', function() {
                 document.querySelectorAll('.time-btn').forEach(b => {
-                    b.classList.remove('bg-orange-600');
-                    b.classList.add('bg-white/10');
+                    b.classList.remove('active', 'bg-orange-600', 'border-orange-600');
+                    b.classList.add('bg-white/10', 'border-transparent');
                 });
-                btn.classList.add('bg-orange-600');
-                btn.classList.remove('bg-white/10');
-                gameState.roundTime = parseInt(btn.dataset.time);
+                this.classList.add('active', 'bg-orange-600', 'border-orange-600');
+                this.classList.remove('bg-white/10', 'border-transparent');
+                gameState.roundTime = parseInt(this.dataset.time);
+                console.log('Время изменено на:', gameState.roundTime); // Для отладки
             });
         });
 
         document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', function() {
                 document.querySelectorAll('.mode-btn').forEach(b => {
-                    b.classList.remove('active', 'bg-orange-600');
-                    b.classList.add('bg-white/10');
+                    b.classList.remove('active', 'bg-orange-600', 'border-orange-600');
+                    b.classList.add('bg-white/10', 'border-transparent');
                 });
-                btn.classList.add('active', 'bg-orange-600');
-                btn.classList.remove('bg-white/10');
-                gameState.gameMode = btn.dataset.mode;
+                this.classList.add('active', 'bg-orange-600', 'border-orange-600');
+                this.classList.remove('bg-white/10', 'border-transparent');
+                gameState.gameMode = this.dataset.mode;
             });
         });
 
@@ -430,10 +444,13 @@
 
         // --- ЛОГИКА ИГРЫ ---
         function startGame() {
+            console.log('Игра начата с временем:', gameState.roundTime); // Для отладки
             document.getElementById('setupScreen').classList.add('hidden');
             document.getElementById('gameScreen').classList.remove('hidden');
             updateScoreDisplay();
             updateTeamDisplay();
+            // Устанавливаем начальное значение таймера
+            document.getElementById('timerDisplay').textContent = gameState.roundTime;
         }
 
         function getRandomDish() {
